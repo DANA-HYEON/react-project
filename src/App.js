@@ -1,44 +1,60 @@
 import Button from "./Button";
 import styles from "./App.module.css";
 import {useState, useEffect} from "react";
+import { configure } from "@testing-library/react";
 
 
 function App() {
-  const [value, setValue] = useState("");
-  const [toDos, setTodos] = useState([]);
+  
+  const [loading, setLoading] = useState(true); //로딩을 위한 변수
+  const [coins, setCoins] = useState([]); //코인 배열 받아오는 변수
+  const [investment, setInvestment] = useState(0); //투자금 받는 변수
+  const [coinIndex, setCoinIndex] = useState("first"); //선택된 코인 종류(배열 index)
+  const [clickedCoinPrice, setClickedCoinPrice] = useState(0); //선택된 코인 금액
 
-  const onChange = (event)=>{
-    setValue(event.target.value);
+  //한번만 실행
+  useEffect(() => {
+    fetch("https://api.coinpaprika.com/v1/tickers")
+      .then((response) => response.json())
+      .then((responseJson) => {
+          setCoins(responseJson.slice(0,20)); //받아온 코인 setCoins 정보를 배열에 저장
+          setLoading(false); //로딩문구 지우기
+        });
+      }, []);
+
+  //투자금 체크
+  const onChange = (event) => {
+    setInvestment(event.target.value);
   }
 
-  const onSubmit = (event) => {
-    event.preventDefault();
-    if(value === ""){
-      return;
-    }
-
-    setTodos((prev)=>[...prev,value]);
-    setValue("");
+  //코인인덱스 체크
+  const onChangeCoin = (event) => {
+    setCoinIndex(event.target.value); //코인 배열 인덱스 저장
   }
 
-  const deleteBtn = (index) => {
-    setTodos(toDos.filter((item,todoIndex) => index !== todoIndex));
-  }
-
-  console.log(toDos);
-  return (
+  return(
     <div>
-      <h1>My To Dos({toDos.length})</h1>
-      <form onSubmit={onSubmit}>
-        <input value={value} onChange={onChange} type="text" placeholder="plz input your todo list"/>
-        <button>Add To Do</button>
-      </form>
+      <h1>The Coins! ({coins.length})</h1>
+      {loading ? <strong>Loading...</strong> : null}
+
+      {/* 투자금 입력받기 */}
+      <input type="number" onChange={onChange} placeholder="please input your investment"/>USD
       <hr/>
-      <ul>
-        {toDos.map((item,index) => 
-          <li key={index}>{item} 
-          <button onClick={()=>deleteBtn(index)}>❌</button></li>)}
-      </ul>
+
+      {/* 코인종류 선택 */}
+      <select value={coinIndex} onChange={onChangeCoin}>
+        <option value="first">please choose your coinType</option>
+        {coins.map((coin, index) => (
+          <option key={coin.id} value={index}>
+            {coin.name} ({coin.symbol}) : ${coin.quotes.USD.price}
+          </option>
+        ))}
+      </select>
+      <hr/>
+
+       {/* 이걸 좀 더 깔끔하게 만들 순 없을까..? */}
+       {coins[coinIndex] ? <h1>You can buy ({Math.floor(investment / coins[coinIndex].quotes.USD.price)})</h1> : null}
+    
     </div>
   );
 }
