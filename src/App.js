@@ -8,7 +8,7 @@ import Home from"./routes/Home";
 //route를 바라보는 component(Home, Detail.js)를 렌더링하는 역할
 function App() {
     return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
          {/* route(url)을 찾는 역할 */}
         <Switch>
             <Route path="/hello">
